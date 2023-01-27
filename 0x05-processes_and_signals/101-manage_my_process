@@ -1,27 +1,35 @@
 #!/usr/bin/env bash
-# This script is managing manage_my_process.
+# This script 'manages my process'
+if [ "$#" -ne 1 ]
+then
+    echo "Usage: manage_my_process {start|stop|restart}"
+    exit $?
+fi
 
-start() {
-	./manage_my_process &
-	echo $$ >/var/run/my_process.pid
-	if [ "$1" -eq 1 ]; then echo "manage_my_process started"; fi
-}
+if [ "$1" != "start" ] && [ "$1" != "stop" ] && [ "$1" != "restart" ]
+then
+    echo "Usage: manage_my_process {start|stop|restart}"
+    exit $?
+fi
 
-stop() {
-	kill "$(pgrep -f './manage_my_process')"
-	rm -f /var/run/my_process.pid
-	if [ "$1" -eq 1 ]; then echo "manage_my_process stopped"; fi
-}
+if [ "$1" == "start" ]
+then
+    ./manage_my_process &
+    echo "$!" > /var/run/my_process.pid
+    echo "manage_my_process started"
 
-restart() {
-	stop 0
-	start 0
-	echo "manage_my_process restarted"
-}
+elif [ "$1" == "stop" ]
+then
+    kill "$(cat /var/run/my_process.pid)"
+    rm /var/run/my_process.pid
+    echo "manage_my_process stopped"
 
-case "$1" in
-start) start 1 ;;
-stop) stop 1 ;;
-restart) restart ;;
-*) echo "Usage: manage_my_process {start|stop|restart}" ;;
-esac
+elif [ "$1" == "restart" ]
+then
+    kill "$(cat /var/run/my_process.pid)"
+    rm /var/run/my_process.pid
+    ./manage_my_process &
+    echo "$!" > /var/run/my_process.pid
+    echo "manage_my_process restarted"
+
+fi
